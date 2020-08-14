@@ -1,4 +1,4 @@
-DOCKER_PREFIX=cfplatformeng
+DOCKER_PREFIX=docker.ci.pix4d.com
 DOCKER_NAME=concourse-pypi-resource
 .PHONY: all clean clean_test dist testenv
 
@@ -39,7 +39,7 @@ dist: .venv/.installed
 	docker build . \
 		--tag "$(DOCKER_NAME):latest" \
 		--tag "$(DOCKER_NAME):$$version" \
-		--tag "$(DOCKER_PREFIX)/$(DOCKER_NAME):latest-rc" \
+		--tag "$(DOCKER_PREFIX)/$(DOCKER_NAME):latest" \
 		--tag "$(DOCKER_PREFIX)/$(DOCKER_NAME):$$version" && \
 	echo "$$version" > dist/.docker-version
 
@@ -50,4 +50,4 @@ dist: .venv/.installed
 push: 
 	version=$$(cat dist/.docker-version) && \
 	docker push "$(DOCKER_PREFIX)/$(DOCKER_NAME):$$version" && \
-	docker push "$(DOCKER_PREFIX)/$(DOCKER_NAME):latest-rc"
+	docker push "$(DOCKER_PREFIX)/$(DOCKER_NAME):latest"
