@@ -6,3 +6,4 @@ RUN pip install --upgrade pip==18.1 && \
     apk del .build-deps gcc musl-dev libffi-dev libressl-dev && \
     mkdir -p /opt/resource && \
     for script in check in out; do ln -sv $(which $script) /opt/resource/; done
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
