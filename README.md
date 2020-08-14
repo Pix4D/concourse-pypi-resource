@@ -86,6 +86,9 @@ plan:
 
 ## `put`: Upload a new version
 * `glob`: *Required* A [glob](https://docs.python.org/2/library/glob.html) expression matching the package file to upload.
+* `wait_for_availability`: *Optional* When it is set to True, put task implement a check to make sure the package is available to the PyPi server. This check is implement with a retry mechanism: the resource will try `max_availability_check_retry` time to check that the package is available, and it will wait `availability_waiting_time` in between each retry. By default set to False.
+* `max_availability_check_retry`: *Optional* Number of maximum retry before the task fails. By default 10 times.
+* `availability_waiting_time`: *Optional* Time to wait in sec between two iterations of retry. By default 30s.
 
 ### Example
 ```yaml

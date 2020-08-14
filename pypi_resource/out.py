@@ -21,6 +21,11 @@ import subprocess
 import sys
 
 from . import common, pipio
+from .retry import retry_wrapper
+
+
+TIMEOUT = 30 # waiting time in sec in between each iteration of availability check
+RETRIES = 10 # Number of check to assess that the package is correctly uploaded
 
 
 def find_package(pattern, srcdir):
@@ -28,6 +33,13 @@ def find_package(pattern, srcdir):
     common.msg('Glob {} matched files: {}', pattern, files)
     files = sorted(files, key=lambda x: common.get_package_info(x)['version'])
     return files[-1]
+
+
+def check_availability(input, version):
+    versions = pipio.pip_get_versions(input)
+    version_list = [str(v) for v in versions.keys()]
+    if version not in [str(v) for v in versions.keys()]:
+        raise ValueError(f'Version not found in PyPi server')
 
 
 def upload_package(pkgpath, input):
@@ -65,6 +77,14 @@ def out(srcdir, input):
 
     common.msg('Uploading {} version {}', pkgpath, version)
     upload_package(pkgpath, input)
+
+    # Check availability
+    availability_check = input['params'].get('wait_for_availability', False)
+    retries = input['params'].get('max_availability_check_retry', RETRIES)
+    timeout = input['params'].get('availability_waiting_time', TIMEOUT)
+    if availability_check:
+        check = retry_wrapper(retries, timeout)(check_availability)
+        check(input, version)
 
     return {'version': {'version': version}}
 
