@@ -38,7 +38,7 @@ Docker image publicly available on Docker Hub: https://hub.docker.com/r/cfplatfo
 ``` yaml
 resource_types:
 - name: pypi
-  type: docker-image
+  type: registry-image
   source:
     repository: cfplatformeng/concourse-pypi-resource
 
