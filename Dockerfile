@@ -1,4 +1,5 @@
-FROM python:3
+FROM python:3.10.5
+
 COPY dist/concourse-pypi-resource-*.tar.gz .
 RUN pip install concourse-pypi-resource-*.tar.gz && \
     mkdir -p /opt/resource && \

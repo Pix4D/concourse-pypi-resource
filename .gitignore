@@ -30,6 +30,7 @@ lib64/
 *.egg-info/
 .venv/
 test/test_dist/
+test.sh
 
 # Installer logs
 pip-log.txt
