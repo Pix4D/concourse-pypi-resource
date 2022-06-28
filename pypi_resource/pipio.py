@@ -45,15 +45,17 @@ class ListVersionsCommand(PipDownloadCommand):
         options.retries = RETRIES
         options.ignore_installed = True
         options.editables = []
+        options.platform = None
+        options.abi = None
 
         with self._build_session(options) as session:
             finder = self._build_package_finder(
                 options=options,
                 session=session,
                 target_python = TargetPython(
-                    platform=options.platform,
+                    platforms=options.platform,
                     py_version_info=options.python_version,
-                    abi=options.abi,
+                    abis=options.abi,
                     implementation=options.implementation,
                 ),
             )
@@ -230,5 +232,6 @@ def pip_download_link(resconfig, url: str, destdir: str):
                     Link(url),
                     destdir,
                     Downloader(session, "pretty"),
+                    verbosity=1,
                 )
                 shutil.copy(file.path, destdir)
