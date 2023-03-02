@@ -41,6 +41,7 @@ def upload_package(pkgpath, input):
     twine_cmd = [sys.executable, '-m', 'twine', 'upload']
 
     url, unused_hostname = pipio.get_pypi_url(input, 'out')
+    print(url)
 
     username = repocfg.get('username', os.getenv('TWINE_USERNAME'))
     password = repocfg.get('password', os.getenv('TWINE_PASSWORD'))
