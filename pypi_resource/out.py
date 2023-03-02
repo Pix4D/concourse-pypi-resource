@@ -55,7 +55,8 @@ def upload_package(pkgpath, input):
         'TWINE_PASSWORD': password,
         'TWINE_REPOSITORY_URL': url
     })
-
+    
+    print(env)
     try:
         subprocess.run(
             twine_cmd,
