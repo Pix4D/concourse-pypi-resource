@@ -13,6 +13,7 @@
 import requests
 import shutil
 import sys
+import tempfile
 from contextlib import redirect_stdout
 from typing import Dict, List, Tuple
 from urllib.parse import urlsplit, urlunsplit
@@ -26,6 +27,7 @@ from pip._internal.models.link import Link
 from pip._internal.models.target_python import TargetPython
 from pip._internal.cli.status_codes import SUCCESS
 from pip._internal.utils.temp_dir import global_tempdir_manager
+from pip._vendor.packaging.version import Version, InvalidVersion # for other files
 
 from . import common
 
