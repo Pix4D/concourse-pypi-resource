@@ -132,6 +132,8 @@ jobs:
   - task: run-unit-tests
     image: python.docker
     file: pypi.git/ci/tasks/unit-test.yml
+    params:
+      ci_user_password: ((concourse_artifactory_password))
 
 - name: concourse-pypi-resource-build
   <<: *base-job

@@ -13,3 +13,4 @@ run:
     pip install --upgrade pip
     pip install --no-input pipenv
     cd pypi.git && pipenv run make test
+    pipenv run python -m pytest "test/nexus-integration.py"
