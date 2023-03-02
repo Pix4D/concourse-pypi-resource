@@ -129,8 +129,7 @@ def get_pypi_url(input, mode='in', kind='repository') -> Tuple[str, str]:
             url_parts[1]
         )
         host_login = host_login.lstrip(':@')
-        #url = urlunsplit((url_parts[0], host_login, url_parts[2], url_parts[3], url_parts[4]))
-        url = f"{url_parts.scheme}://{host_login}{url_parts.netloc}{url_parts.path}"
+        url = urlunsplit((url_parts[0], host_login, url_parts[2], url_parts[3], url_parts[4]))
 
     hostname = url_parts[1].split(':')[0]
     return url, hostname
