@@ -55,6 +55,7 @@ resources:
 - name: linux-builder.git
   icon: git
   type: git
+  webhook_token: ((concourse_gh_webhook))
   source:
     uri: git@github.com:Pix4D/linux-image-build.git
     private_key: ((github_ssh_key))
@@ -78,6 +79,7 @@ resources:
 - name: pypi.git
   icon: git
   type: git
+  webhook_token: ((concourse_gh_webhook))
   source:
     uri: git@github.com:Pix4D/concourse-pypi-resource.git
     private_key: ((github_ssh_key))
@@ -85,12 +87,14 @@ resources:
 
 - name: pypi.docker
   type: registry-image
+  check_every: never
   source:
     <<: *docker-registry-config
     repository: docker.ci.pix4d.com/concourse-pypi-resource
     tag: ((docker_tag))
 
 - name: pypi.dev-docker
+  check_every: never
   type: registry-image
   source:
     <<: *docker-registry-config
@@ -99,6 +103,7 @@ resources:
 
 - name: python.docker
   type: registry-image
+  check_every: 24h
   source:
     repository: python
     tag: '3.11'
