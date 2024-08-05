@@ -1,20 +1,25 @@
 ---
 base-job: &base-job
+  max_in_flight: 1
   on_success:
     put: cogito
     inputs: [pypi.git]
+    no_get: true
     params: { state: success }
   on_abort:
     put: cogito
     inputs: [pypi.git]
+    no_get: true
     params: { state: abort }
   on_failure:
     put: cogito
     inputs: [pypi.git]
+    no_get: true
     params: { state: failure }
   on_error:
     put: cogito
     inputs: [pypi.git]
+    no_get: true
     params: { state: error }
 
 docker-registry-config: &docker-registry-config
@@ -126,6 +131,7 @@ jobs:
   - get: python.docker
   - put: cogito
     inputs: [pypi.git]
+    no_get: true
     params: {state: pending}
   - task: run-unit-tests
     image: python.docker
@@ -142,6 +148,7 @@ jobs:
   - get: version
   - put: cogito
     inputs: [pypi.git]
+    no_get: true
     params: {state: pending}
   - task: build-wheel
     image: python.docker
@@ -154,6 +161,7 @@ jobs:
     input_mapping: {repo: wheel}
   - put: pypi.dev-docker
     inputs: [image]
+    no_get: true
     params:
       image: image/image.tar
 
@@ -168,6 +176,7 @@ jobs:
   - get: version
   - put: cogito
     inputs: [pypi.git]
+    no_get: true
     params: {state: pending}
   - task: build-example-wheel
     image: python.docker
@@ -175,6 +184,7 @@ jobs:
   - put: pix4d-pypi
     inputs:
       - dist
+    no_get: true
     params:
       glob: 'dist/*'
 
@@ -191,9 +201,12 @@ jobs:
     params:
       format: oci
   - put: version
+    inputs: [version]
+    no_get: true
     params: {file: version/version}
   - put: pypi.docker
     inputs: [pypi.dev-docker, version]
+    no_get: true
     params:
       image: pypi.dev-docker/image.tar
       additional_tags: ((docker_tag_add_file))
