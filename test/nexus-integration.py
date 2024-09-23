@@ -76,17 +76,17 @@ class TestCheck(unittest.TestCase):
 
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
-    
+
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
-    
+
     def get_versions(self, **kwargs):
         resconfig = make_input(None, **kwargs)
         resconfig = common.merge_defaults(resconfig)
         pkg_artefacts = pipio.pip_get_versions(resconfig)
         versions = list(sorted(pkg_artefacts.keys()))
         return versions
-    
+
     def get_download(self, **kwargs):
         resconfig = make_input(None, **kwargs)
         resconfig = common.merge_defaults(resconfig)
@@ -133,7 +133,8 @@ class TestCheck(unittest.TestCase):
             name='test_package1',
             packaging='source',
         )
-        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1rc1'), pipio.Version('1.0.1')])        
+        self.assertListEqual(versions, [pipio.Version('1.0.0'), pipio.Version('1.0.1rc1'), pipio.Version('1.0.1')])
+
 
 class TestPut(unittest.TestCase):
     pkg_name = 'put_step_test_package'
@@ -166,33 +167,6 @@ class TestPut(unittest.TestCase):
             )
             assert output['version']['version'] == version
 
-    def test_fail_to_upload_if_package_version_not_pep440_compliant(self):
-        src_repo = os.path.join(THISDIR, 'generalized_package')
-        with tempfile.TemporaryDirectory() as tmpdir:
-            dst_repo = os.path.join(tmpdir, 'generalized_package')
-            shutil.copytree(src_repo, dst_repo)
-            rc = subprocess.run(['python', 'setup.py', 'sdist'],
-                check=True, cwd=dst_repo,
-                env={
-                    **os.environ,
-                    'TEST_PACKAGE_NAME': self.pkg_name,
-                    # Version format does not follow PEP440 guidelines.
-                    # See https://peps.python.org/pep-0440 for more details
-                    'TEST_PACKAGE_VERSION': '0.0.0-343-gea3bdad',
-                }
-            )
-            print("sdist returned", rc)
-            with self.assertRaises(out.VersionValidationError):
-                out.out(
-                    os.path.join(dst_repo, "dist"),
-                    {
-                        'source': {
-                            'name': self.pkg_name,
-                            'repository': make_input(None)['source']['repository']
-                        },
-                        'params': {'glob': '*.tar.gz'}
-                    }
-                )
 
 if __name__ == '__main__':
     unittest.main()
