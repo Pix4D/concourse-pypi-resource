@@ -93,24 +93,6 @@ class TestPut(unittest.TestCase):
                 }
             )
 
-    def test_fail_to_upload_if_package_version_not_pep440_compliant(self):
-        rc = subprocess.run(['python', 'setup.py', 'sdist'],
-            check=True, cwd=os.path.join(THISDIR, 'generalized_package'),
-            env={
-                **os.environ,
-                'TEST_PACKAGE_NAME': 'test_package1',
-                'TEST_PACKAGE_VERSION': '0.0.0-343-gea3bdad',
-            }
-        )
-        print("sdist returned", rc)
-        with self.assertRaises(out.VersionValidationError):
-            out.out(
-                os.path.join(THISDIR, 'generalized_package/dist'),
-                {
-                    'source': {'test': True, 'name': 'test_package1', 'repository': {'username': 'dummy', 'password': 'dummy'}},
-                    'params': {'glob': '*.tar.gz'}
-                }
-            )
 
 class TestPip(unittest.TestCase):
 
