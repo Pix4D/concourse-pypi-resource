@@ -165,7 +165,7 @@ jobs:
     params:
       image: image/image.tar
 
-- name: pypi-acceptance-test
+- name: concourse-pypi-resource-integration-test-put
   <<: *base-job
   plan:
   - get: pypi.dev-docker
@@ -188,6 +188,23 @@ jobs:
     params:
       glob: 'dist/*'
 
+- name: concourse-pypi-resource-integration-test-get
+  <<: *base-job
+  plan:
+  - get: pypi.dev-docker
+    trigger: true
+    passed: [concourse-pypi-resource-integration-test-put]
+  - get: pypi.git
+  - get: python.docker
+  - get: pix4d-pypi
+  - put: cogito
+    inputs: [pypi.git]
+    no_get: true
+    params: {state: pending}
+  - task: install-example-wheel
+    image: python.docker
+    file: pypi.git/ci/tasks/install-example-wheel.yml
+
 - name: publish-concourse-pypi-resource
   <<: *base-job
   plan:
@@ -197,7 +214,7 @@ jobs:
       bump: patch
   - get: pypi.dev-docker
     trigger: ((trigger))
-    passed: [pypi-acceptance-test]
+    passed: [concourse-pypi-resource-integration-test-get]
     params:
       format: oci
   - put: version
