@@ -23,8 +23,8 @@ base-job: &base-job
     params: { state: error }
 
 docker-registry-config: &docker-registry-config
-  username: ((docker_cloud_pix4d_user))
-  password: ((docker_cloud_pix4d_password))
+  username: concourse
+  password: ((concourse_artifactory_password))
 
 s3-params: &s3-params
   bucket: ci-pix4d-concourse-pipeline
@@ -42,6 +42,7 @@ resource_types:
 
 - name: pypi.test
   type: registry-image
+  check_every: 24h
   source:
     <<: *docker-registry-config
     repository: docker.ci.pix4d.com/concourse-pypi-resource
