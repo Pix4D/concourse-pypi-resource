@@ -23,8 +23,8 @@ base-job: &base-job
     params: { state: error }
 
 docker-registry-config: &docker-registry-config
-  username: ((docker_cloud_pix4d_user))
-  password: ((docker_cloud_pix4d_password))
+  username: concourse
+  password: ((concourse_artifactory_password))
 
 s3-params: &s3-params
   bucket: ci-pix4d-concourse-pipeline
@@ -42,6 +42,7 @@ resource_types:
 
 - name: pypi.test
   type: registry-image
+  check_every: 24h
   source:
     <<: *docker-registry-config
     repository: docker.ci.pix4d.com/concourse-pypi-resource
@@ -98,7 +99,7 @@ resources:
     repository: docker.ci.pix4d.com/concourse-pypi-resource
     tag: ((docker_tag))
 
-- name: pypi.dev-docker
+- name: pypi-dev.docker
   check_every: never
   type: registry-image
   source:
@@ -145,7 +146,6 @@ jobs:
     passed: [concourse-pypi-resource-unit-tests]
   - get: linux-builder.git
   - get: python.docker
-  - get: version
   - put: cogito
     inputs: [pypi.git]
     no_get: true
@@ -159,21 +159,19 @@ jobs:
     params:
       CONTEXT: repo/
     input_mapping: {repo: wheel}
-  - put: pypi.dev-docker
+  - put: pypi-dev.docker
     inputs: [image]
     no_get: true
     params:
       image: image/image.tar
 
-- name: pypi-acceptance-test
+- name: concourse-pypi-resource-integration-test-put
   <<: *base-job
   plan:
-  - get: pypi.dev-docker
-    trigger: true
-    passed: [concourse-pypi-resource-build]
   - get: pypi.git
+    trigger: true
+    passed: [ concourse-pypi-resource-build ]
   - get: python.docker
-  - get: version
   - put: cogito
     inputs: [pypi.git]
     no_get: true
@@ -188,16 +186,30 @@ jobs:
     params:
       glob: 'dist/*'
 
+- name: concourse-pypi-resource-integration-test-get
+  <<: *base-job
+  plan:
+  - get: pypi.git
+    trigger: true
+    passed: [ concourse-pypi-resource-integration-test-put ]
+  - put: cogito
+    inputs: [ pypi.git ]
+    no_get: true
+    params: { state: pending }
+  - get: pix4d-pypi
+    passed: [ concourse-pypi-resource-integration-test-put ]
+
 - name: publish-concourse-pypi-resource
   <<: *base-job
   plan:
   - get: pypi.git
+    trigger: ((trigger))
+    passed: [ concourse-pypi-resource-integration-test-get ]
   - get: version
     params:
       bump: patch
-  - get: pypi.dev-docker
-    trigger: ((trigger))
-    passed: [pypi-acceptance-test]
+  - get: pypi-dev.docker
+    passed: [ concourse-pypi-resource-build ]
     params:
       format: oci
   - put: version
@@ -205,8 +217,8 @@ jobs:
     no_get: true
     params: {file: version/version}
   - put: pypi.docker
-    inputs: [pypi.dev-docker, version]
+    inputs: [pypi-dev.docker, version]
     no_get: true
     params:
-      image: pypi.dev-docker/image.tar
+      image: pypi-dev.docker/image.tar
       additional_tags: ((docker_tag_add_file))
