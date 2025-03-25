@@ -4,15 +4,15 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-twine = "*"
 pip = "==24.2"
-setuptools = "*"
 pkginfo = "==1.12.1.2"
+setuptools = "*"
+twine = "*"
 
 [dev-packages]
-pytest = "*"
 flake8 = "*"
 pylint = "*"
+pytest = "*"
 semver = "*"
 
 [requires]
