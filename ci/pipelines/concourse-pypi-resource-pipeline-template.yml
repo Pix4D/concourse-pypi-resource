@@ -68,9 +68,11 @@ resources:
     branch: master
     paths:
       - ci/tasks/*
+    disable_ci_skip: true # This is needed to let the git resource optimize the check step.
 
 - name: pix4d-pypi
   type: pypi.test
+  check_every: never
   source:
     name: test-package1
     packaging: any
@@ -90,6 +92,7 @@ resources:
     uri: git@github.com:Pix4D/concourse-pypi-resource.git
     private_key: ((github_ssh_key))
     branch: ((branch))
+    disable_ci_skip: true # This is needed to let the git resource optimize the check step.
 
 - name: pypi.docker
   type: registry-image
