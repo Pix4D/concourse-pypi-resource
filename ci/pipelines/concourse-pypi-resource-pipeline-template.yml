@@ -74,7 +74,7 @@ resources:
   type: pypi.test
   check_every: never
   source:
-    name: test-package1
+    name: test_package1
     packaging: any
     pre_release: true
     repository:
