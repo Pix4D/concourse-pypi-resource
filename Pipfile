@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 pip = "==24.2"
-pkginfo = "==1.12.1.2"
 setuptools = "*"
 twine = ">=7.0.0"
 
