@@ -187,12 +187,12 @@ def get_package_info(pkgpath):
 
     if pkgpath.endswith(".whl"):
         with zipfile.ZipFile(pkgpath, "r") as z:
-            name, version, *_ = parse_wheel_filename(os.path.basename(pkgpath))
+            name, version = os.path.basename(pkgpath).split("-")[:2]
             meta_name = f"{name}-{version}.dist-info/METADATA"
             raw_metadata = z.read(meta_name)
     elif pkgpath.endswith(".tar.gz"):
         with tarfile.open(pkgpath, "r:gz") as t:
-            name, version = parse_sdist_filename(os.path.basename(pkgpath))
+            name, version = pkgpath.split("-")[:2]
             meta_name = f"{name}-{version}/PKG-INFO"
             f_obj = t.extractfile(meta_name)
             raw_metadata = f_obj.read() if f_obj else b""
