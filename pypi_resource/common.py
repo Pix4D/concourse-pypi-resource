@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import re
 import sys
 from typing import Dict, List
+import tarfile
+import zipfile
 
-import pkginfo
+from packaging.utils import parse_sdist_filename, parse_wheel_filename
+from packaging.metadata import Metadata
 
 from . import pipio
 
@@ -178,16 +182,33 @@ def merge_defaults(resconfig):
 
 
 def get_package_info(pkgpath):
-    """ Provide a subset of the package metadata to merge into the Concourse resource metadata. """
-    pkgmeta = pkginfo.get_metadata(pkgpath)
+    """Provide a subset of the package metadata to merge into the Concourse resource metadata."""
+    raw_metadata = b""
+
+    if pkgpath.endswith(".whl"):
+        with zipfile.ZipFile(pkgpath, "r") as z:
+            name, version = os.path.basename(pkgpath).split("-")[:2]
+            meta_name = f"{name}-{version}.dist-info/METADATA"
+            raw_metadata = z.read(meta_name)
+    elif pkgpath.endswith(".tar.gz"):
+        with tarfile.open(pkgpath, "r:gz") as t:
+            name, version = pkgpath.split("-")[:2]
+            meta_name = f"{name}-{version}/PKG-INFO"
+            f_obj = t.extractfile(meta_name)
+            raw_metadata = f_obj.read() if f_obj else b""
+
+    # Python package metadata is stored in an RFC 822 (email header) format.
+    # The standard email module is enough to parse it.
+    pkgmeta = Metadata.from_email(raw_metadata)
+    platforms = pkgmeta.platforms or []
     result = {
         'version': pkgmeta.version,
         'metadata': {
             'package_name': pkgmeta.name,
             'summary': pkgmeta.summary,
             'home_page': pkgmeta.home_page,
-            'platforms': ', '.join(pkgmeta.platforms),
+            'platforms': ', '.join(platforms),
             'requires_python': pkgmeta.requires_python,
-        }
+        },
     }
     return result
