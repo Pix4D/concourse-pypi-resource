@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import re
 import sys
 from typing import Dict, List
 import tarfile
 import zipfile
 
+from packaging.utils import parse_sdist_filename, parse_wheel_filename
 from packaging.metadata import Metadata
 
 from . import pipio
@@ -183,40 +185,30 @@ def get_package_info(pkgpath):
     """Provide a subset of the package metadata to merge into the Concourse resource metadata."""
     raw_metadata = b""
 
-    if pkgpath.endswith(".whl") or pkgpath.endswith("zip"):
+    if pkgpath.endswith(".whl"):
         with zipfile.ZipFile(pkgpath, "r") as z:
-            meta_name = next(
-                (
-                    f
-                    for f in z.namelist()
-                    if f.endswith(".dist-info/METADATA")
-                    or f.endswith("EGG-INFO/PKG-INFO")
-                ),
-                None,
-            )
-            if meta_name:
-                raw_metadata = z.read(meta_name)
-    elif pkgpath.endswith("tar.gz") or pkgpath.endswith(".tgz"):
+            name, version, *_ = parse_wheel_filename(os.path.basename(pkgpath))
+            meta_name = f"{name}-{version}.dist-info/METADATA"
+            raw_metadata = z.read(meta_name)
+    elif pkgpath.endswith(".tar.gz"):
         with tarfile.open(pkgpath, "r:gz") as t:
-            meta_name = next((f for f in t.getnames() if f.endswith("PKG-INFO")), None)
-            if meta_name:
-                f_obj = t.extractfile(meta_name)
-                raw_metadata = f_obj.read() if f_obj else b""
-    if not raw_metadata:
-        raise ValueError(f"Could not find METADATA or PKG-INFO inside {pkgpath}")
+            name, version = parse_sdist_filename(os.path.basename(pkgpath))
+            meta_name = f"{name}-{version}/PKG-INFO"
+            f_obj = t.extractfile(meta_name)
+            raw_metadata = f_obj.read() if f_obj else b""
 
     # Python package metadata is stored in an RFC 822 (email header) format.
     # The standard email module is enough to parse it.
     pkgmeta = Metadata.from_email(raw_metadata)
     platforms = pkgmeta.platforms or []
     result = {
-        "version": pkgmeta.version,
-        "metadata": {
-            "package_name": pkgmeta.name,
-            "summary": pkgmeta.summary,
-            "home_page": pkgmeta.home_page,
-            "platforms": ", ".join(platforms),
-            "requires_python": pkgmeta.requires_python,
+        'version': pkgmeta.version,
+        'metadata': {
+            'package_name': pkgmeta.name,
+            'summary': pkgmeta.summary,
+            'home_page': pkgmeta.home_page,
+            'platforms': ', '.join(platforms),
+            'requires_python': pkgmeta.requires_python,
         },
     }
     return result
