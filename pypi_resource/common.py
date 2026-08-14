@@ -192,7 +192,7 @@ def get_package_info(pkgpath):
             raw_metadata = z.read(meta_name)
     elif pkgpath.endswith(".tar.gz"):
         with tarfile.open(pkgpath, "r:gz") as t:
-            name, version = pkgpath.split("-")[:2]
+            name, version = os.path.basename(pkgpath).removesuffix(".tar.gz").split("-")[:2]
             meta_name = f"{name}-{version}/PKG-INFO"
             f_obj = t.extractfile(meta_name)
             raw_metadata = f_obj.read() if f_obj else b""
