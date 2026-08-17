@@ -17,7 +17,7 @@ import json
 import os
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from pip._internal.models.candidate import InstallationCandidate
 from pip._internal.models.link import Link
@@ -114,6 +114,59 @@ class TestPypi(unittest.TestCase):
         input = common.merge_defaults(input)
         self.assertEqual(pipio.get_pypi_url(input), ('https://upload.pypi.org/legacy/', 'upload.pypi.org'))
 
+    @patch("pypi_resource.common.Metadata")
+    @patch("pypi_resource.common.zipfile.ZipFile")
+    def test_pypi_get_package_info_wheel_metaname(self, mock_zipfile_class, MockMetadata):
+        """Check if the wheel metadata location is computed correctly."""
+        test_cases = (
+            # format: (pkgpath, (expected name, expected version))
+            ("/a/path/computron-2.7.3.dev28+g9a2c6e35e-py3-none-any.whl", ("computron", "2.7.3.dev28+g9a2c6e35e")),
+            ("/tmp/zig/zag/zog/toto_tata2-0.14.1-py3-none-any.whl", ("toto_tata2", "0.14.1")),
+        )
+
+        for pkgpath, (expected_name, expected_version) in test_cases:
+            with self.subTest(pkgpath=pkgpath):
+                # setup the context manager (with zipfile.ZipFile(...) as z)
+                mock_z = MagicMock()
+                mock_zipfile_class.return_value.__enter__.return_value = mock_z
+
+                # call the function
+                common.get_package_info(pkgpath)
+
+                # verify that z.read() was called with the expected metadata path
+                expected_meta_name = f"{expected_name}-{expected_version}.dist-info/METADATA"
+                mock_z.read.assert_called_once_with(expected_meta_name)
+
+                mock_zipfile_class.reset_mock()
+                MockMetadata.reset_mock()
+
+    @patch("pypi_resource.common.Metadata")
+    @patch("pypi_resource.common.tarfile.open")
+    def test_pypi_get_package_info_sdist_metaname(self, mock_tarfile_open, MockMetadata):
+        """Check if the sdist pkg-info is computed correctly."""
+        test_cases = (
+            # format: (pkgpath, (expected name, expected version))
+            ("/tmp/1/2/3/my-bucket.s3/acme_inc_quantity_report-2.11.1.tar.gz", ("acme_inc_quantity_report", "2.11.1")),
+            ("/tmp/a/b/c/another-bucket.s3/banana_split-4.0.1.post1.tar.gz", ("banana_split", "4.0.1.post1")),
+        )
+
+        for pkgpath, (expected_name, expected_version) in test_cases:
+            with self.subTest(pkgpath=pkgpath):
+                # setup the context manager (with tarfile.open(...) as t)
+                mock_t = MagicMock()
+                mock_tarfile_open.return_value.__enter__.return_value = mock_t
+
+                # mock extractfile returning an object
+                mock_f_obj = MagicMock()
+                mock_t.extractfile.return_value = mock_f_obj
+
+                common.get_package_info(pkgpath)
+
+                expected_meta_name = f"{expected_name}-{expected_version}/PKG-INFO"
+                mock_t.extractfile.assert_called_once_with(expected_meta_name)
+
+                mock_tarfile_open.reset_mock()
+                MockMetadata.reset_mock()
 
 class TestCheck(unittest.TestCase):
     def setUp(self):
